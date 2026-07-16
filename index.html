@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#E83828">
+<title>오젬픽 투약 체크</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%89%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23E83828'/%3E%3Ctext x='50' y='68' font-size='60' text-anchor='middle'%3E%F0%9F%92%89%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --main:#E83828;
+    --sub:#F04E37;
+    --peach:#FFEADF;
+    --gray:#787878;
+    --line:#BFBFBF;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size:21px;
+    line-height:1.55;
+    color:#222222;
+    background:#ffffff;
+    width:100%;
+    padding-bottom:60px;
+    -webkit-text-size-adjust:100%;
+  }
+  .app-header{
+    background:var(--main);
+    color:#ffffff;
+    padding:26px 20px;
+    text-align:center;
+    position:relative;
+  }
+  .app-header h1{ margin:0; font-size:32px; }
+  .settings-btn{
+    position:absolute;
+    top:20px; right:16px;
+    width:48px; height:48px;
+    background:rgba(255,255,255,0.18);
+    border:none;
+    border-radius:12px;
+    color:#ffffff;
+    font-size:24px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+  }
+
+  main{ width:100%; padding:16px; }
+
+  .card{
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:24px 20px;
+    margin-bottom:20px;
+    background:#ffffff;
+  }
+  .today-card{
+    text-align:center;
+    background:var(--peach);
+    border:2px solid var(--main);
+  }
+  .dday{
+    font-size:48px;
+    font-weight:800;
+    color:var(--main);
+    margin-bottom:14px;
+  }
+  .round-info{
+    font-size:24px;
+    color:#333333;
+    margin-bottom:22px;
+  }
+  .btn{
+    border:none;
+    border-radius:14px;
+    min-height:60px;
+    font-size:22px;
+    font-weight:700;
+    padding:14px 20px;
+    cursor:pointer;
+  }
+  .btn-huge{
+    width:100%;
+    font-size:32px;
+    min-height:88px;
+    background:var(--main);
+    color:#ffffff;
+  }
+  .btn-overdue{ background:var(--sub); }
+  .btn-main{ background:var(--main); color:#ffffff; flex:1; }
+  .btn-outline{ background:#ffffff; color:var(--main); border:2px solid var(--main); flex:1; }
+  .btn-danger{ background:#ffffff; color:var(--main); border:2px solid var(--main); }
+  .btn-danger.armed{ background:var(--main); color:#ffffff; }
+  .btn-small{ min-height:52px; font-size:19px; padding:8px 16px; }
+
+  .row-buttons{ display:flex; gap:12px; flex-wrap:wrap; }
+
+  .missed-box{ background:var(--peach); border:2px solid var(--sub); }
+  .missed-box h2{ color:var(--sub); margin-top:0; font-size:24px; }
+  .missed-box p{ font-size:21px; color:#333333; margin:0; }
+
+  .progress-card h2{ margin-top:0; font-size:26px; color:var(--main); }
+  .progress-grid{ display:flex; flex-direction:column; gap:12px; margin-bottom:18px; }
+  .progress-item{ display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid var(--line); padding-bottom:10px; }
+  .progress-item .label{ color:var(--gray); font-size:20px; }
+  .progress-item .value{ font-weight:800; font-size:24px; color:#222222; text-align:right; }
+  .increase-info p{ margin:8px 0; font-size:20px; color:#333333; }
+
+  h2{ font-size:26px; margin:0 0 14px 0; }
+
+  .record-item{
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .record-top{ display:flex; justify-content:space-between; font-size:20px; color:var(--gray); margin-bottom:8px; }
+  .record-round{ font-weight:800; color:var(--main); font-size:22px; }
+  .record-mid{ display:flex; justify-content:space-between; margin-bottom:8px; flex-wrap:wrap; gap:6px; }
+  .record-dose{ font-size:24px; font-weight:800; }
+  .record-site{ font-size:20px; color:#333333; }
+  .record-extra{ font-size:19px; color:var(--gray); margin-bottom:8px; }
+  .record-memo{ font-size:19px; color:#333333; background:#f7f7f7; padding:10px; border-radius:8px; margin-bottom:8px; white-space:pre-wrap; }
+  .record-actions{ display:flex; gap:10px; justify-content:flex-end; }
+
+  .empty{ color:var(--gray); text-align:center; padding:20px 0; font-size:20px; }
+
+  details summary{ font-size:22px; font-weight:700; color:var(--main); cursor:pointer; padding:8px 0; }
+  details ol{ font-size:20px; padding-left:26px; margin:12px 0 0 0; }
+  details li{ margin-bottom:12px; }
+
+  .toast{
+    position:fixed;
+    left:16px; right:16px; bottom:16px;
+    background:#333333; color:#ffffff;
+    padding:16px 20px;
+    border-radius:12px;
+    font-size:19px;
+    text-align:center;
+    z-index:2000;
+  }
+  .hidden{ display:none !important; }
+
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(0,0,0,0.5);
+    z-index:1000;
+    overflow-y:auto;
+    padding:20px;
+  }
+  .modal{
+    background:#ffffff;
+    border-radius:16px;
+    padding:26px 20px;
+    width:100%;
+  }
+  .modal h2{ margin-top:0; color:var(--main); }
+  #recordForm label{ display:block; margin-bottom:18px; font-size:19px; color:#333333; }
+  #recordForm input, #recordForm textarea{
+    display:block;
+    width:100%;
+    font-size:21px;
+    padding:12px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    margin-top:6px;
+    box-sizing:border-box;
+    font-family:inherit;
+  }
+  .setup-card{ text-align:left; }
+  .setup-card h2{ margin-top:0; font-size:26px; color:var(--main); }
+  .setup-card p{ font-size:19px; color:#333333; margin:0 0 18px 0; }
+  #setupForm label, #settingsForm label{ display:block; margin-bottom:18px; font-size:19px; color:#333333; }
+  #setupForm input, #settingsForm input{
+    display:block;
+    width:100%;
+    font-size:21px;
+    padding:12px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    margin-top:6px;
+    box-sizing:border-box;
+    font-family:inherit;
+  }
+  .form-hint{ font-size:16px; color:var(--gray); margin:0 0 18px 0; }
+  .site-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px; }
+  .site-btn{
+    border:2px solid var(--line);
+    background:#ffffff;
+    border-radius:10px;
+    padding:14px 8px;
+    font-size:19px;
+    min-height:60px;
+    cursor:pointer;
+  }
+  .site-btn.selected{ border-color:var(--main); background:var(--peach); color:var(--main); font-weight:700; }
+
+  footer.note{ text-align:center; color:var(--gray); font-size:17px; padding:20px; }
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast hidden"></div>
+
+<header class="app-header">
+  <button type="button" class="settings-btn" id="btnSettings" aria-label="설정" title="설정">⚙️</button>
+  <h1>💉 오젬픽 투약 체크</h1>
+</header>
+
+<main>
+
+  <section class="card today-card" id="todayCard"></section>
+
+  <section class="card missed-box">
+    <h2>⚠️ 투약을 놓쳤다면</h2>
+    <p>
+      놓친 지 <strong>5일 이내</strong>면 생각나는 즉시 투약하세요.<br>
+      다음 정기 투약일까지 <strong>48시간 미만</strong>으로 남았다면 이번 회차는 건너뛰고 다음 정기 일정대로 투약하세요.<br>
+      <strong>반드시 의사·약사와 상의</strong>하세요.
+    </p>
+  </section>
+
+  <section class="card progress-card hidden" id="progressCard"></section>
+
+  <section class="card hidden" id="pastRecordCard">
+    <div class="row-buttons">
+      <button type="button" class="btn btn-outline" id="btnPastRecord" style="min-height:60px;">📝 지난 투약 기록하기</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>투약 기록</h2>
+    <div id="recordList"></div>
+  </section>
+
+  <section class="card">
+    <h2>데이터 백업</h2>
+    <div class="row-buttons">
+      <button type="button" class="btn btn-outline" id="btnCopy">📋 전체 기록 텍스트 복사</button>
+      <button type="button" class="btn btn-outline" id="btnDownload">⬇️ JSON 파일 다운로드</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <details>
+      <summary>📱 홈 화면에 추가하는 방법</summary>
+      <ol>
+        <li>아이폰 <strong>사파리(Safari)</strong>로 이 페이지를 열어주세요.</li>
+        <li>화면 아래쪽(또는 위쪽) <strong>공유 아이콘</strong>(네모 위로 화살표가 나가는 모양)을 탭하세요.</li>
+        <li>공유 메뉴를 아래로 내려 <strong>"홈 화면에 추가"</strong>를 탭하세요.</li>
+        <li>오른쪽 위 <strong>"추가"</strong>를 탭하면 완료됩니다.</li>
+        <li>이후에는 홈 화면의 아이콘을 눌러 바로 열 수 있습니다. 기록은 이 아이폰 안에만 저장되며 서버로 전송되지 않습니다.</li>
+        <li>항상 홈 화면 아이콘으로 여세요 — 기록이 한 곳에 쌓입니다.</li>
+        <li>🔔 알림은 아이폰 <strong>미리알림</strong> 앱에 "매주 투약 요일 아침" 반복 알림을 함께 설정하세요(이 웹앱은 자체 알림을 보낼 수 없습니다).</li>
+      </ol>
+    </details>
+  </section>
+
+  <footer class="note">기록은 이 기기의 브라우저에만 저장됩니다. 기기를 바꾸거나 사파리 데이터를 지우면 사라지니, 데이터 백업 기능을 주기적으로 사용해주세요.</footer>
+
+</main>
+
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">투약 기록</h2>
+    <form id="recordForm">
+      <label>날짜
+        <input type="date" id="fDate" required>
+      </label>
+      <label>시각
+        <input type="time" id="fTime" required>
+      </label>
+      <label>회차
+        <input type="number" id="fRound" min="1" step="1" required>
+      </label>
+      <label>용량(mg)
+        <input type="number" id="fDose" min="0" step="0.05" required>
+      </label>
+      <label>주사 부위</label>
+      <div class="site-grid" id="siteGrid"></div>
+      <label>체중(kg, 선택)
+        <input type="number" id="fWeight" min="0" step="0.1" placeholder="예: 90.5">
+      </label>
+      <label>공복혈당(mg/dL, 선택)
+        <input type="number" id="fGlucose" min="0" step="1" placeholder="예: 95">
+      </label>
+      <label>부작용/메모(선택)
+        <textarea id="fMemo" rows="3" placeholder="메스꺼움, 소화불량 등"></textarea>
+      </label>
+      <div class="row-buttons">
+        <button type="button" class="btn btn-outline" id="btnCancel">취소</button>
+        <button type="submit" class="btn btn-main">저장</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="settingsModalOverlay">
+  <div class="modal">
+    <h2>⚙️ 시작 설정 수정</h2>
+    <form id="settingsForm">
+      <label>1회차 투약일
+        <input type="date" id="settingsStartDate" required>
+      </label>
+      <p class="form-hint">시작일을 변경하면 모든 회차의 날짜가 다시 계산됩니다.</p>
+      <label>시작 체중(kg, 선택)
+        <input type="number" id="settingsStartWeight" min="0" step="0.1" placeholder="예: 90.0">
+      </label>
+      <div class="row-buttons">
+        <button type="button" class="btn btn-outline" id="btnSettingsCancel">취소</button>
+        <button type="submit" class="btn btn-main">저장</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var STORAGE_KEY = 'ozempic-tracker';
+  var SITES = ['복부 왼쪽','복부 오른쪽','허벅지 왼쪽','허벅지 오른쪽','팔 왼쪽','팔 오른쪽'];
+  var WD = ['일','월','화','수','목','금','토'];
+
+  // ---------- 날짜 유틸 (UTC 고정 계산으로 시간대 오차 방지) ----------
+  function parseDateStr(s){
+    var p = s.split('-').map(Number);
+    return new Date(Date.UTC(p[0], p[1]-1, p[2]));
+  }
+  function formatDateStr(d){
+    return d.toISOString().slice(0,10);
+  }
+  function addDaysUTC(d, days){
+    return new Date(d.getTime() + days*86400000);
+  }
+  function roundDate(n, startDate){
+    return formatDateStr(addDaysUTC(parseDateStr(startDate), (n-1)*7));
+  }
+  function formatDateKorean(s){
+    var d = parseDateStr(s);
+    return (d.getUTCMonth()+1) + '월 ' + d.getUTCDate() + '일(' + WD[d.getUTCDay()] + ')';
+  }
+  function daysBetween(aStr, bStr){
+    return Math.round((parseDateStr(aStr) - parseDateStr(bStr)) / 86400000);
+  }
+  function todayStr(){
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function nowTimeStr(){
+    var d = new Date();
+    return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+  function defaultDose(n){
+    if(n <= 4) return 0.25;
+    if(n <= 8) return 0.5;
+    return 1.0;
+  }
+  function roundFromDate(dateStr, startDate){
+    var diffDays = daysBetween(dateStr, startDate);
+    var n = Math.floor(diffDays/7) + 1;
+    return Math.max(1, n);
+  }
+  function doseDayText(startDate){
+    var wd = WD[parseDateStr(startDate).getUTCDay()];
+    return '매주 ' + wd + '요일 아침, 같은 시간대에 맞는 것을 권장합니다.';
+  }
+  function genId(){
+    return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  // ---------- 저장소 ----------
+  function loadData(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return { settings: null, records: [] };
+      var parsed = JSON.parse(raw);
+      if(!parsed || typeof parsed !== 'object') return { settings: null, records: [] };
+      if(!Array.isArray(parsed.records)) parsed.records = [];
+      if(!parsed.settings || typeof parsed.settings !== 'object' || !parsed.settings.startDate){
+        parsed.settings = null;
+      }
+      return parsed;
+    }catch(e){
+      return { settings: null, records: [] };
+    }
+  }
+  function saveData(data){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  var DATA = loadData();
+
+  function hasSettings(){
+    return !!(DATA.settings && DATA.settings.startDate);
+  }
+
+  function sortedRecords(){
+    var list = DATA.records.slice();
+    list.sort(function(a,b){
+      var ak = a.date + ' ' + (a.time || '00:00');
+      var bk = b.date + ' ' + (b.time || '00:00');
+      if(ak < bk) return 1;
+      if(ak > bk) return -1;
+      return 0;
+    });
+    return list;
+  }
+  function getNextPendingRound(){
+    var recorded = {};
+    DATA.records.forEach(function(r){ recorded[r.round] = true; });
+    var n = 1;
+    while(recorded[n]) n++;
+    return n;
+  }
+  function recommendSite(){
+    var list = sortedRecords();
+    if(list.length === 0) return SITES[0];
+    var lastSite = list[0].site;
+    var idx = SITES.indexOf(lastSite);
+    if(idx === -1) return SITES[0];
+    return SITES[(idx+1) % SITES.length];
+  }
+
+  // ---------- 토스트 (alert 대체) ----------
+  var toastTimer = null;
+  function showToast(msg){
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.remove('hidden');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.add('hidden'); }, 2400);
+  }
+
+  // ---------- 최초 설정(온보딩) ----------
+  function renderSetupCard(el){
+    el.innerHTML =
+      '<div class="setup-card">' +
+        '<h2>🎉 시작 설정</h2>' +
+        '<p>1회차 투약일을 입력하면 앱을 사용할 수 있어요. 입력한 정보는 이 기기에만 저장되고, 서버로 전송되지 않습니다.</p>' +
+        '<form id="setupForm">' +
+          '<label>1회차 투약일' +
+            '<input type="date" id="setupStartDate" required>' +
+          '</label>' +
+          '<label>시작 체중(kg, 선택)' +
+            '<input type="number" id="setupStartWeight" min="0" step="0.1" placeholder="예: 90.0">' +
+          '</label>' +
+          '<button type="submit" class="btn btn-huge">🚀 시작하기</button>' +
+        '</form>' +
+      '</div>';
+
+    document.getElementById('setupStartDate').value = todayStr();
+    document.getElementById('setupForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      var sd = document.getElementById('setupStartDate').value;
+      if(!sd){
+        showToast('1회차 투약일을 입력해주세요.');
+        return;
+      }
+      var swRaw = document.getElementById('setupStartWeight').value;
+      DATA.settings = {
+        startDate: sd,
+        startWeight: swRaw === '' ? null : parseFloat(swRaw)
+      };
+      saveData(DATA);
+      renderAll();
+      showToast('시작 설정을 저장했습니다.');
+    });
+  }
+
+  // ---------- 렌더 ----------
+  function renderToday(){
+    var el = document.getElementById('todayCard');
+    if(!hasSettings()){
+      renderSetupCard(el);
+      return;
+    }
+    var startDate = DATA.settings.startDate;
+    var nextRound = getNextPendingRound();
+    var dDate = roundDate(nextRound, startDate);
+    var diff = daysBetween(dDate, todayStr()); // dDate - today
+    var dose = defaultDose(nextRound);
+    var dayLabel = doseDayText(startDate);
+    var html = '';
+
+    if(diff === 0){
+      html += '<div class="dday">오늘 투약일</div>' +
+        '<div class="round-info">' + nextRound + '회차 · ' + dose + 'mg · ' + formatDateKorean(dDate) + '</div>' +
+        '<div class="round-info">' + dayLabel + '</div>' +
+        '<button type="button" class="btn btn-huge" id="btnDoseNow">💉 투약 완료</button>';
+    } else if(diff > 0){
+      html += '<div class="dday">D-' + diff + '</div>' +
+        '<div class="round-info">' + nextRound + '회차 예정 · ' + formatDateKorean(dDate) + ' · ' + dose + 'mg</div>' +
+        '<div class="round-info">' + dayLabel + '</div>';
+    } else {
+      html += '<div class="dday" style="color:var(--sub);">놓친 지 ' + (-diff) + '일 지났어요</div>' +
+        '<div class="round-info">' + nextRound + '회차 · 예정일 ' + formatDateKorean(dDate) + ' · ' + dose + 'mg</div>' +
+        '<div class="round-info">' + dayLabel + '</div>' +
+        '<button type="button" class="btn btn-huge btn-overdue" id="btnDoseNow">💉 지금 기록하기</button>';
+    }
+    el.innerHTML = html;
+
+    var btn = document.getElementById('btnDoseNow');
+    if(btn){
+      btn.addEventListener('click', function(){
+        openModal({
+          date: diff <= 0 ? todayStr() : dDate,
+          time: nowTimeStr(),
+          round: nextRound,
+          dose: dose,
+          site: recommendSite()
+        });
+      });
+    }
+  }
+
+  function renderProgress(){
+    var el = document.getElementById('progressCard');
+    if(!hasSettings()){
+      el.classList.add('hidden');
+      el.innerHTML = '';
+      return;
+    }
+    el.classList.remove('hidden');
+
+    var startDate = DATA.settings.startDate;
+    var startWeight = (DATA.settings.startWeight === null || DATA.settings.startWeight === undefined) ? null : DATA.settings.startWeight;
+    var total = DATA.records.length;
+    var withWeight = sortedRecords().filter(function(r){
+      return r.weight !== null && r.weight !== undefined && r.weight !== '';
+    });
+
+    var weightRows;
+    if(startWeight === null){
+      var curLine = withWeight.length > 0 ? (withWeight[0].weight + 'kg') : '기록 없음';
+      weightRows =
+        '<div class="progress-item"><span class="label">시작 체중</span><span class="value">미입력(⚙️에서 입력 가능)</span></div>' +
+        '<div class="progress-item"><span class="label">현재 체중</span><span class="value">' + curLine + '</span></div>';
+    } else {
+      var weightLine;
+      if(withWeight.length > 0){
+        var cur = parseFloat(withWeight[0].weight);
+        var delta = cur - startWeight;
+        var sign = delta > 0 ? '+' : '';
+        weightLine = cur + 'kg (시작 대비 ' + sign + delta.toFixed(1) + 'kg)';
+      } else {
+        weightLine = '기록 없음';
+      }
+      weightRows =
+        '<div class="progress-item"><span class="label">시작 체중</span><span class="value">' + startWeight + 'kg</span></div>' +
+        '<div class="progress-item"><span class="label">현재 체중</span><span class="value">' + weightLine + '</span></div>';
+    }
+
+    var r5 = roundDate(5, startDate), r9 = roundDate(9, startDate);
+    el.innerHTML =
+      '<h2>진행 현황</h2>' +
+      '<div class="progress-grid">' +
+        '<div class="progress-item"><span class="label">총 투약 횟수</span><span class="value">' + total + '회</span></div>' +
+        weightRows +
+      '</div>' +
+      '<div class="increase-info">' +
+        '<p>5회차(' + formatDateKorean(r5) + ')부터 <strong>0.5mg</strong>으로 증량</p>' +
+        '<p>9회차(' + formatDateKorean(r9) + ')부터 <strong>1.0mg</strong>으로 증량</p>' +
+      '</div>';
+  }
+
+  var deleteArmed = {}; // id -> timeoutId
+
+  function clearAllArmed(){
+    Object.keys(deleteArmed).forEach(function(id){
+      clearTimeout(deleteArmed[id]);
+    });
+    deleteArmed = {};
+  }
+
+  function renderList(){
+    clearAllArmed();
+    var el = document.getElementById('recordList');
+    var list = sortedRecords();
+    if(list.length === 0){
+      el.innerHTML = '<p class="empty">아직 기록이 없습니다.</p>';
+      return;
+    }
+    el.innerHTML = list.map(function(r){
+      var parts = [];
+      if(r.weight !== null && r.weight !== undefined && r.weight !== '') parts.push('체중 ' + r.weight + 'kg');
+      if(r.glucose !== null && r.glucose !== undefined && r.glucose !== '') parts.push('공복혈당 ' + r.glucose + 'mg/dL');
+      var extra = parts.length ? ('<div class="record-extra">' + parts.join(' · ') + '</div>') : '';
+      var memo = r.memo ? ('<div class="record-memo">' + escapeHtml(r.memo) + '</div>') : '';
+      return '<div class="record-item" data-id="' + r.id + '">' +
+        '<div class="record-top">' +
+          '<span class="record-round">' + r.round + '회차</span>' +
+          '<span class="record-date">' + formatDateKorean(r.date) + ' ' + (r.time || '') + '</span>' +
+        '</div>' +
+        '<div class="record-mid">' +
+          '<span class="record-dose">' + r.dose + 'mg</span>' +
+          '<span class="record-site">' + escapeHtml(r.site || '') + '</span>' +
+        '</div>' +
+        extra + memo +
+        '<div class="record-actions">' +
+          '<button type="button" class="btn btn-small btn-outline" data-action="edit" data-id="' + r.id + '">수정</button>' +
+          '<button type="button" class="btn btn-small btn-danger" data-action="delete" data-id="' + r.id + '">삭제</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function renderAll(){
+    renderToday();
+    renderProgress();
+    var pr = document.getElementById('pastRecordCard');
+    if(hasSettings()) pr.classList.remove('hidden');
+    else pr.classList.add('hidden');
+    renderList();
+  }
+
+  // ---------- 목록 클릭(수정/삭제, 삭제는 2탭) ----------
+  document.getElementById('recordList').addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-action]');
+    if(!btn) return;
+    var id = btn.getAttribute('data-id');
+    var action = btn.getAttribute('data-action');
+
+    if(action === 'edit'){
+      var rec = DATA.records.find(function(r){ return r.id === id; });
+      if(rec){
+        openModal({
+          editId: id,
+          date: rec.date,
+          time: rec.time,
+          round: rec.round,
+          dose: rec.dose,
+          site: rec.site,
+          weight: rec.weight,
+          glucose: rec.glucose,
+          memo: rec.memo
+        });
+      }
+    } else if(action === 'delete'){
+      if(deleteArmed[id]){
+        clearTimeout(deleteArmed[id]);
+        delete deleteArmed[id];
+        DATA.records = DATA.records.filter(function(r){ return r.id !== id; });
+        saveData(DATA);
+        renderAll();
+        showToast('삭제했습니다.');
+      } else {
+        btn.textContent = '한번 더 탭하면 삭제';
+        btn.classList.add('armed');
+        deleteArmed[id] = setTimeout(function(){
+          btn.textContent = '삭제';
+          btn.classList.remove('armed');
+          delete deleteArmed[id];
+        }, 3000);
+      }
+    }
+  });
+
+  // ---------- 투약 기록 모달 ----------
+  var currentEdit = null;
+  var selectedSite = SITES[0];
+
+  function buildSiteGrid(selected){
+    var grid = document.getElementById('siteGrid');
+    grid.innerHTML = SITES.map(function(s){
+      return '<button type="button" class="site-btn' + (s === selected ? ' selected' : '') + '" data-site="' + s + '">' + s + '</button>';
+    }).join('');
+    var btns = grid.querySelectorAll('.site-btn');
+    btns.forEach(function(b){
+      b.addEventListener('click', function(){
+        selectedSite = b.getAttribute('data-site');
+        btns.forEach(function(x){ x.classList.remove('selected'); });
+        b.classList.add('selected');
+      });
+    });
+  }
+
+  function openModal(opts){
+    opts = opts || {};
+    var startDate = DATA.settings ? DATA.settings.startDate : todayStr();
+    currentEdit = opts.editId || null;
+    document.getElementById('modalTitle').textContent = currentEdit ? '기록 수정' : '투약 기록';
+
+    var date = opts.date || todayStr();
+    var round = opts.round || roundFromDate(date, startDate);
+    var dose = (opts.dose !== undefined && opts.dose !== null) ? opts.dose : defaultDose(round);
+
+    document.getElementById('fDate').value = date;
+    document.getElementById('fTime').value = opts.time || nowTimeStr();
+    document.getElementById('fRound').value = round;
+    document.getElementById('fDose').value = dose;
+    document.getElementById('fWeight').value = (opts.weight === null || opts.weight === undefined) ? '' : opts.weight;
+    document.getElementById('fGlucose').value = (opts.glucose === null || opts.glucose === undefined) ? '' : opts.glucose;
+    document.getElementById('fMemo').value = opts.memo || '';
+
+    selectedSite = opts.site || recommendSite();
+    buildSiteGrid(selectedSite);
+
+    document.getElementById('modalOverlay').classList.remove('hidden');
+  }
+  function closeModal(){
+    document.getElementById('modalOverlay').classList.add('hidden');
+    currentEdit = null;
+  }
+
+  document.getElementById('fDate').addEventListener('change', function(){
+    var dt = document.getElementById('fDate').value;
+    if(!dt) return;
+    var startDate = DATA.settings ? DATA.settings.startDate : todayStr();
+    var r = roundFromDate(dt, startDate);
+    document.getElementById('fRound').value = r;
+    document.getElementById('fDose').value = defaultDose(r);
+  });
+  document.getElementById('fRound').addEventListener('change', function(){
+    var r = parseInt(document.getElementById('fRound').value, 10);
+    if(r > 0) document.getElementById('fDose').value = defaultDose(r);
+  });
+
+  document.getElementById('btnCancel').addEventListener('click', closeModal);
+  document.getElementById('modalOverlay').addEventListener('click', function(e){
+    if(e.target && e.target.id === 'modalOverlay') closeModal();
+  });
+
+  document.getElementById('recordForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var date = document.getElementById('fDate').value;
+    var time = document.getElementById('fTime').value;
+    var round = parseInt(document.getElementById('fRound').value, 10);
+    var dose = parseFloat(document.getElementById('fDose').value);
+    var weightVal = document.getElementById('fWeight').value;
+    var glucoseVal = document.getElementById('fGlucose').value;
+    var memo = document.getElementById('fMemo').value.trim();
+
+    if(!date || !time || !round || isNaN(dose)){
+      showToast('날짜·시각·회차·용량을 확인해주세요.');
+      return;
+    }
+
+    var rec = {
+      id: currentEdit || genId(),
+      round: round,
+      date: date,
+      time: time,
+      dose: dose,
+      site: selectedSite,
+      weight: weightVal === '' ? null : parseFloat(weightVal),
+      glucose: glucoseVal === '' ? null : parseFloat(glucoseVal),
+      memo: memo
+    };
+
+    if(currentEdit){
+      var idx = DATA.records.findIndex(function(r){ return r.id === currentEdit; });
+      if(idx >= 0) DATA.records[idx] = rec;
+    } else {
+      DATA.records.push(rec);
+    }
+    saveData(DATA);
+    closeModal();
+    renderAll();
+    showToast('저장했습니다.');
+  });
+
+  document.getElementById('btnPastRecord').addEventListener('click', function(){
+    var startDate = DATA.settings ? DATA.settings.startDate : todayStr();
+    var d = todayStr();
+    var r = roundFromDate(d, startDate);
+    openModal({ date: d, time: nowTimeStr(), round: r, dose: defaultDose(r), site: recommendSite() });
+  });
+
+  // ---------- 시작 설정 수정(⚙️) ----------
+  function openSettingsModal(){
+    var s = DATA.settings || {};
+    document.getElementById('settingsStartDate').value = s.startDate || todayStr();
+    document.getElementById('settingsStartWeight').value = (s.startWeight === null || s.startWeight === undefined) ? '' : s.startWeight;
+    document.getElementById('settingsModalOverlay').classList.remove('hidden');
+  }
+  function closeSettingsModal(){
+    document.getElementById('settingsModalOverlay').classList.add('hidden');
+  }
+
+  document.getElementById('btnSettings').addEventListener('click', openSettingsModal);
+  document.getElementById('btnSettingsCancel').addEventListener('click', closeSettingsModal);
+  document.getElementById('settingsModalOverlay').addEventListener('click', function(e){
+    if(e.target && e.target.id === 'settingsModalOverlay') closeSettingsModal();
+  });
+
+  document.getElementById('settingsForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var sd = document.getElementById('settingsStartDate').value;
+    if(!sd){
+      showToast('1회차 투약일을 입력해주세요.');
+      return;
+    }
+    var swRaw = document.getElementById('settingsStartWeight').value;
+    DATA.settings = {
+      startDate: sd,
+      startWeight: swRaw === '' ? null : parseFloat(swRaw)
+    };
+    saveData(DATA);
+    closeSettingsModal();
+    renderAll();
+    showToast('설정을 저장했습니다.');
+  });
+
+  // ---------- 백업 ----------
+  function buildBackupText(){
+    var list = sortedRecords();
+    if(list.length === 0) return '오젬픽 투약 기록 (기록 없음)';
+    var startWeight = (DATA.settings && DATA.settings.startWeight !== null && DATA.settings.startWeight !== undefined) ? DATA.settings.startWeight : null;
+    var lines = ['오젬픽 투약 기록', '시작 체중: ' + (startWeight === null ? '미입력' : startWeight + 'kg'), ''];
+    list.forEach(function(r){
+      var line = r.round + '회차 | ' + formatDateKorean(r.date) + ' ' + (r.time || '') + ' | ' + r.dose + 'mg | ' + r.site;
+      if(r.weight !== null && r.weight !== undefined && r.weight !== '') line += ' | 체중 ' + r.weight + 'kg';
+      if(r.glucose !== null && r.glucose !== undefined && r.glucose !== '') line += ' | 공복혈당 ' + r.glucose + 'mg/dL';
+      if(r.memo) line += ' | 메모: ' + r.memo;
+      lines.push(line);
+    });
+    return lines.join('\n');
+  }
+
+  function fallbackCopy(text){
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.top = '-1000px';
+    ta.style.left = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try{
+      document.execCommand('copy');
+      showToast('클립보드에 복사했습니다.');
+    }catch(e){
+      showToast('복사에 실패했습니다. 직접 선택해 복사해주세요.');
+    }
+    document.body.removeChild(ta);
+  }
+  function copyText(text){
+    if(navigator.clipboard && window.isSecureContext){
+      navigator.clipboard.writeText(text).then(function(){
+        showToast('클립보드에 복사했습니다.');
+      }).catch(function(){
+        fallbackCopy(text);
+      });
+    } else {
+      fallbackCopy(text);
+    }
+  }
+
+  document.getElementById('btnCopy').addEventListener('click', function(){
+    copyText(buildBackupText());
+  });
+
+  document.getElementById('btnDownload').addEventListener('click', function(){
+    try{
+      var blob = new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = '오젬픽_기록_' + todayStr() + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+      showToast('다운로드를 시작합니다.');
+    }catch(e){
+      showToast('다운로드에 실패했습니다.');
+    }
+  });
+
+  // ---------- 시작 ----------
+  renderAll();
+})();
+</script>
+</body>
+</html>
